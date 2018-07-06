@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介ViewPager 是 v4 包中的一个类，直接继承自 ViewGroup 类。它需要通过 PagerAdapter 适配器给它提供数据。在开发中我们用的最多的就是把它和 Fragment 配合实现左右滑动的主页框架。 怎么使用 ViewPager 像使用 Textview 一样直接使用  1234&amp;lt;android.support.v4.view.ViewPager        and">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ViewPager 源码分析">
+<meta property="og:url" content="privatez.github.io/ViewPager-源码分析/index.html">
+<meta property="og:site_name" content="Privatezcoding">
+<meta property="og:description" content="简介ViewPager 是 v4 包中的一个类，直接继承自 ViewGroup 类。它需要通过 PagerAdapter 适配器给它提供数据。在开发中我们用的最多的就是把它和 Fragment 配合实现左右滑动的主页框架。 怎么使用 ViewPager 像使用 Textview 一样直接使用  1234&amp;lt;android.support.v4.view.ViewPager        and">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-07-06T12:42:55.589Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ViewPager 源码分析">
+<meta name="twitter:description" content="简介ViewPager 是 v4 包中的一个类，直接继承自 ViewGroup 类。它需要通过 PagerAdapter 适配器给它提供数据。在开发中我们用的最多的就是把它和 Fragment 配合实现左右滑动的主页框架。 怎么使用 ViewPager 像使用 Textview 一样直接使用  1234&amp;lt;android.support.v4.view.ViewPager        and">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="privatez.github.io/ViewPager-源码分析/"/>
+
+
+
+
+
+  <title>ViewPager 源码分析 | Privatezcoding</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?efcdac93bc44f4a44c3cbf958ea634db";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Privatezcoding</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            Commonweal 404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="privatez.github.io/ViewPager-源码分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="privatez">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/17670278?v=3&s=460">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Privatezcoding">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ViewPager 源码分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-07-06T20:42:55+08:00">
+                2018-07-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/ViewPager-源码分析/" class="leancloud_visitors" data-flag-title="ViewPager 源码分析">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">Visitors&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><strong>ViewPager 是 v4 包中的一个类，直接继承自 ViewGroup 类。它需要通过 PagerAdapter 适配器给它提供数据。在开发中我们用的最多的就是把它和 Fragment 配合实现左右滑动的主页框架。</strong></p>
+<h4 id="怎么使用-ViewPager"><a href="#怎么使用-ViewPager" class="headerlink" title="怎么使用 ViewPager"></a>怎么使用 ViewPager</h4><ul>
+<li>像使用 Textview 一样直接使用</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;android.support.v4.view.ViewPager</span><br><span class="line">        android:id=&quot;@+id/vp_order&quot;</span><br><span class="line">        android:layout_width=&quot;match_parent&quot;</span><br><span class="line">        android:layout_height=&quot;match_parent&quot; /&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>在代码中简单的设置</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// 设置适配器</span><br><span class="line">vpOrder.setAdapter(new OrderFragmentPagerAdapter(getChildFragmentManager()));</span><br><span class="line">// 通过 position 设置默认显示的View</span><br><span class="line">vpOrder.setCurrentItem(0);</span><br><span class="line">// 设置缓存页面数</span><br><span class="line">vpOrder.setOffscreenPageLimit(OrderFragmentPagerAdapter.COUNT);</span><br><span class="line">// 设置页面改变的监听 可以通过这个监听实现和其他 view 的联动，比如 RadioButton</span><br><span class="line">vpOrder.addOnPageChangeListener(this);</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h2 id="ViewPager-源码分析"><a href="#ViewPager-源码分析" class="headerlink" title="ViewPager 源码分析"></a>ViewPager 源码分析</h2><h4 id="构造方法"><a href="#构造方法" class="headerlink" title="构造方法"></a>构造方法</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line">public ViewPager(Context context, AttributeSet attrs) &#123;</span><br><span class="line">        super(context, attrs);</span><br><span class="line">        initViewPager();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void initViewPager() &#123;</span><br><span class="line">        setWillNotDraw(false);</span><br><span class="line">        setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);</span><br><span class="line">        // 可以获取焦点</span><br><span class="line">        setFocusable(true);</span><br><span class="line">        final Context context = getContext();</span><br><span class="line">        // 初始化 Scroller 辅助类</span><br><span class="line">        mScroller = new Scroller(context, sInterpolator);</span><br><span class="line">        // 包含了方法和标准的常量用来设置UI的超时、大小和距离</span><br><span class="line">        final ViewConfiguration configuration = ViewConfiguration.get(context);</span><br><span class="line">        final float density = context.getResources().getDisplayMetrics().density;</span><br><span class="line"></span><br><span class="line">        mTouchSlop = ViewConfigurationCompat.getScaledPagingTouchSlop(configuration);</span><br><span class="line">        // 最小速度</span><br><span class="line">        mMinimumVelocity = (int) (MIN_FLING_VELOCITY * density);</span><br><span class="line">        // 最大速度</span><br><span class="line">        mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();</span><br><span class="line">        // 左边边缘效果</span><br><span class="line">        mLeftEdge = new EdgeEffectCompat(context);</span><br><span class="line">        // 右边边缘效果</span><br><span class="line">        mRightEdge = new EdgeEffectCompat(context);</span><br><span class="line"></span><br><span class="line">        mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);</span><br><span class="line">        mCloseEnough = (int) (CLOSE_ENOUGH * density);</span><br><span class="line">        mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);</span><br><span class="line"></span><br><span class="line">        ViewCompat.setAccessibilityDelegate(this, new MyAccessibilityDelegate());</span><br><span class="line"></span><br><span class="line">        if (ViewCompat.getImportantForAccessibility(this)</span><br><span class="line">                == ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_AUTO) &#123;</span><br><span class="line">            ViewCompat.setImportantForAccessibility(this,</span><br><span class="line">                    ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);</span><br><span class="line">        &#125;</span><br><span class="line">        // 设置监听</span><br><span class="line">        ViewCompat.setOnApplyWindowInsetsListener(this,</span><br><span class="line">                new android.support.v4.view.OnApplyWindowInsetsListener() &#123;</span><br><span class="line">                    private final Rect mTempRect = new Rect();</span><br><span class="line"></span><br><span class="line">                    @Override</span><br><span class="line">                    public WindowInsetsCompat onApplyWindowInsets(final View v,</span><br><span class="line">                            final WindowInsetsCompat originalInsets) &#123;</span><br><span class="line">                        // First let the ViewPager itself try and consume them...</span><br><span class="line">                        final WindowInsetsCompat applied =</span><br><span class="line">                                ViewCompat.onApplyWindowInsets(v, originalInsets);</span><br><span class="line">                        if (applied.isConsumed()) &#123;</span><br><span class="line">                            // If the ViewPager consumed all insets, return now</span><br><span class="line">                            return applied;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        // Now we&apos;ll manually dispatch the insets to our children. Since ViewPager</span><br><span class="line">                        // children are always full-height, we do not want to use the standard</span><br><span class="line">                        // ViewGroup dispatchApplyWindowInsets since if child 0 consumes them,</span><br><span class="line">                        // the rest of the children will not receive any insets. To workaround this</span><br><span class="line">                        // we manually dispatch the applied insets, not allowing children to</span><br><span class="line">                        // consume them from each other. We do however keep track of any insets</span><br><span class="line">                        // which are consumed, returning the union of our children&apos;s consumption</span><br><span class="line">                        // 设置 Rect</span><br><span class="line">                        final Rect res = mTempRect;</span><br><span class="line">                        res.left = applied.getSystemWindowInsetLeft();</span><br><span class="line">                        res.top = applied.getSystemWindowInsetTop();</span><br><span class="line">                        res.right = applied.getSystemWindowInsetRight();</span><br><span class="line">                        res.bottom = applied.getSystemWindowInsetBottom();</span><br><span class="line"></span><br><span class="line">                        for (int i = 0, count = getChildCount(); i &lt; count; i++) &#123;</span><br><span class="line">                            final WindowInsetsCompat childInsets = ViewCompat</span><br><span class="line">                                    .dispatchApplyWindowInsets(getChildAt(i), applied);</span><br><span class="line">                            // Now keep track of any consumed by tracking each dimension&apos;s min</span><br><span class="line">                            // value</span><br><span class="line">                            res.left = Math.min(childInsets.getSystemWindowInsetLeft(),</span><br><span class="line">                                    res.left);</span><br><span class="line">                            res.top = Math.min(childInsets.getSystemWindowInsetTop(),</span><br><span class="line">                                    res.top);</span><br><span class="line">                            res.right = Math.min(childInsets.getSystemWindowInsetRight(),</span><br><span class="line">                                    res.right);</span><br><span class="line">                            res.bottom = Math.min(childInsets.getSystemWindowInsetBottom(),</span><br><span class="line">                                    res.bottom);</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        // Now return a new WindowInsets, using the consumed window insets</span><br><span class="line">                        return applied.replaceSystemWindowInsets(</span><br><span class="line">                                res.left, res.top, res.right, res.bottom);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="viewpager-中的成员变量定义"><a href="#viewpager-中的成员变量定义" class="headerlink" title="viewpager 中的成员变量定义"></a>viewpager 中的成员变量定义</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// 适配器数据大小</span><br><span class="line">private int mExpectedAdapterCount;</span><br><span class="line"></span><br><span class="line">// viewpager 中每个 item 对象类</span><br><span class="line">static class ItemInfo &#123;</span><br><span class="line">    // 具体对象 比如 fragment</span><br><span class="line">    Object object;</span><br><span class="line">    // 位置</span><br><span class="line">    int position;</span><br><span class="line">    // 是否滑动</span><br><span class="line">    boolean scrolling;</span><br><span class="line">    // 宽度</span><br><span class="line">    float widthFactor;</span><br><span class="line">    // 偏移量</span><br><span class="line">    float offset;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 比较器</span><br><span class="line">private static final Comparator&lt;ItemInfo&gt; COMPARATOR = new Comparator&lt;ItemInfo&gt;()&#123;</span><br><span class="line">    @Override</span><br><span class="line">    public int compare(ItemInfo lhs, ItemInfo rhs) &#123;</span><br><span class="line">        return lhs.position - rhs.position;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">// 动画插补器</span><br><span class="line">private static final Interpolator sInterpolator = new Interpolator() &#123;</span><br><span class="line">    public float getInterpolation(float t) &#123;</span><br><span class="line">        t -= 1.0f;</span><br><span class="line">        return t * t * t * t * t + 1.0f;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">// viewpager 中所有的 item</span><br><span class="line">private final ArrayList&lt;ItemInfo&gt; mItems = new ArrayList&lt;ItemInfo&gt;();</span><br><span class="line">// 临时 item </span><br><span class="line">private final ItemInfo mTempItem = new ItemInfo();</span><br><span class="line"></span><br><span class="line">private final Rect mTempRect = new Rect();</span><br><span class="line">// adapter</span><br><span class="line">private PagerAdapter mAdapter;</span><br><span class="line">// 目前显示的 item</span><br><span class="line">private int mCurItem;   // Index of currently displayed page.</span><br><span class="line">// 需要恢复的 item</span><br><span class="line">private int mRestoredCurItem = -1;</span><br><span class="line">// adapter 状态</span><br><span class="line">private Parcelable mRestoredAdapterState = null;</span><br><span class="line">private ClassLoader mRestoredClassLoader = null;</span><br><span class="line"></span><br><span class="line">private Scroller mScroller;</span><br><span class="line">// Scroller是否启动</span><br><span class="line">private boolean mIsScrollStarted;</span><br><span class="line">// pager 通知</span><br><span class="line">private PagerObserver mObserver;</span><br><span class="line"></span><br><span class="line">private int mPageMargin;</span><br><span class="line">private Drawable mMarginDrawable;</span><br><span class="line">private int mTopPageBounds;</span><br><span class="line">private int mBottomPageBounds;</span><br><span class="line"></span><br><span class="line">// Offsets of the first and last items, if known.</span><br><span class="line">// Set during population, used to determine if we are at the beginning</span><br><span class="line">// or end of the pager data set during touch scrolling.</span><br><span class="line">// 第一个 item 的偏移量 </span><br><span class="line">private float mFirstOffset = -Float.MAX_VALUE;</span><br><span class="line">// 最后一个 item 的偏移量</span><br><span class="line">private float mLastOffset = Float.MAX_VALUE;</span><br><span class="line"></span><br><span class="line">private int mChildWidthMeasureSpec;</span><br><span class="line">private int mChildHeightMeasureSpec;</span><br><span class="line">private boolean mInLayout;</span><br><span class="line"></span><br><span class="line">private boolean mScrollingCacheEnabled;</span><br><span class="line">// 填充是否等待</span><br><span class="line">private boolean mPopulatePending;</span><br><span class="line">// 需要一直保存多少个 item</span><br><span class="line">private int mOffscreenPageLimit = DEFAULT_OFFSCREEN_PAGES;</span><br><span class="line"></span><br><span class="line">private boolean mIsBeingDragged;</span><br><span class="line">private boolean mIsUnableToDrag;</span><br><span class="line">private int mDefaultGutterSize;</span><br><span class="line">private int mGutterSize;</span><br><span class="line">private int mTouchSlop;</span><br><span class="line">/**</span><br><span class="line"> * Position of the last motion event.</span><br><span class="line"> */</span><br><span class="line">// 最后运动 x 轴值</span><br><span class="line">private float mLastMotionX;</span><br><span class="line">// 最后运动 y 轴值</span><br><span class="line">private float mLastMotionY;</span><br><span class="line">// 最初运动 x 轴值</span><br><span class="line">private float mInitialMotionX;</span><br><span class="line">// 最初运动 y 轴值</span><br><span class="line">private float mInitialMotionY;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * Determines speed during touch scrolling</span><br><span class="line"> */</span><br><span class="line">private VelocityTracker mVelocityTracker;</span><br><span class="line">// 最小速度</span><br><span class="line">private int mMinimumVelocity;</span><br><span class="line">// 最大速度</span><br><span class="line">private int mMaximumVelocity;</span><br><span class="line">private int mFlingDistance;</span><br><span class="line">private int mCloseEnough;</span><br><span class="line"></span><br><span class="line">private boolean mFakeDragging;</span><br><span class="line">private long mFakeDragBeginTime;</span><br><span class="line"></span><br><span class="line">private EdgeEffectCompat mLeftEdge;</span><br><span class="line">private EdgeEffectCompat mRightEdge;</span><br><span class="line">// 是否为第一个 layout</span><br><span class="line">private boolean mFirstLayout = true;</span><br><span class="line">// 是否需要计算偏移量</span><br><span class="line">private boolean mNeedCalculatePageOffsets = false;</span><br><span class="line">private boolean mCalledSuper;</span><br><span class="line">private int mDecorChildCount;</span><br></pre></td></tr></table></figure>
+<h4 id="根据我们平常使用-viewpager-的习惯我们先分析一下-setadpter-中的源码："><a href="#根据我们平常使用-viewpager-的习惯我们先分析一下-setadpter-中的源码：" class="headerlink" title="根据我们平常使用 viewpager 的习惯我们先分析一下 setadpter 中的源码："></a>根据我们平常使用 viewpager 的习惯我们先分析一下 setadpter 中的源码：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">    * Set a PagerAdapter that will supply views for this pager as needed.</span><br><span class="line">    *</span><br><span class="line">    * @param adapter Adapter to use</span><br><span class="line">    */</span><br><span class="line">   public void setAdapter(PagerAdapter adapter) &#123;</span><br><span class="line">       if (mAdapter != null) &#123;</span><br><span class="line">           // 滞空 viewpager 的数据通知</span><br><span class="line">           mAdapter.setViewPagerObserver(null);</span><br><span class="line">           // 开始更新</span><br><span class="line">           mAdapter.startUpdate(this);</span><br><span class="line">           // 销毁 adapter 中的数据</span><br><span class="line">           for (int i = 0; i &lt; mItems.size(); i++) &#123;</span><br><span class="line">               final ItemInfo ii = mItems.get(i);</span><br><span class="line">               mAdapter.destroyItem(this, ii.position, ii.object);</span><br><span class="line">           &#125;</span><br><span class="line">           // 结束更新</span><br><span class="line">           mAdapter.finishUpdate(this);</span><br><span class="line">           mItems.clear();</span><br><span class="line">           // 清除目前所有的 view</span><br><span class="line">           removeNonDecorViews();</span><br><span class="line">           mCurItem = 0;</span><br><span class="line">           scrollTo(0, 0);</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       final PagerAdapter oldAdapter = mAdapter;</span><br><span class="line">       mAdapter = adapter;</span><br><span class="line">       mExpectedAdapterCount = 0;</span><br><span class="line"></span><br><span class="line">       if (mAdapter != null) &#123;</span><br><span class="line">           if (mObserver == null) &#123;</span><br><span class="line">               mObserver = new PagerObserver();</span><br><span class="line">           &#125;</span><br><span class="line">           // 重新设置数据通知</span><br><span class="line">           mAdapter.setViewPagerObserver(mObserver);</span><br><span class="line">           // 填充是否等待</span><br><span class="line">           mPopulatePending = false;</span><br><span class="line">           final boolean wasFirstLayout = mFirstLayout;</span><br><span class="line">           // 是否是最顶层的 layout</span><br><span class="line">           mFirstLayout = true;</span><br><span class="line">           mExpectedAdapterCount = mAdapter.getCount();</span><br><span class="line">           if (mRestoredCurItem &gt;= 0) &#123;</span><br><span class="line">               // 恢复原始状态</span><br><span class="line">               mAdapter.restoreState(mRestoredAdapterState, mRestoredClassLoader);</span><br><span class="line">               setCurrentItemInternal(mRestoredCurItem, false, true);</span><br><span class="line">               mRestoredCurItem = -1;</span><br><span class="line">               mRestoredAdapterState = null;</span><br><span class="line">               mRestoredClassLoader = null;</span><br><span class="line">           &#125; else if (!wasFirstLayout) &#123;</span><br><span class="line">               // 填充</span><br><span class="line">               populate();</span><br><span class="line">           &#125; else &#123;</span><br><span class="line">               requestLayout();</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       // 通知回调 dapater 更新完成</span><br><span class="line">       if (mAdapterChangeListener != null &amp;&amp; oldAdapter != adapter) &#123;</span><br><span class="line">           mAdapterChangeListener.onAdapterChanged(oldAdapter, adapter);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="接下来我们分析该方法中最重要的方法-populate"><a href="#接下来我们分析该方法中最重要的方法-populate" class="headerlink" title="接下来我们分析该方法中最重要的方法 populate()"></a>接下来我们分析该方法中最重要的方法 populate()</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br></pre></td><td class="code"><pre><span class="line">void populate(int newCurrentItem) &#123;</span><br><span class="line">        ItemInfo oldCurInfo = null;</span><br><span class="line">        if (mCurItem != newCurrentItem) &#123;</span><br><span class="line">            // 通过位置获取到 item 对象</span><br><span class="line">            oldCurInfo = infoForPosition(mCurItem);</span><br><span class="line">            // 赋值</span><br><span class="line">            mCurItem = newCurrentItem;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (mAdapter == null) &#123;</span><br><span class="line">            // 排序</span><br><span class="line">            sortChildDrawingOrder();</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 省略代码...</span><br><span class="line"></span><br><span class="line">        mAdapter.startUpdate(this);</span><br><span class="line"></span><br><span class="line">        // 缓存限制大小</span><br><span class="line">        final int pageLimit = mOffscreenPageLimit;</span><br><span class="line">        // 开始位置</span><br><span class="line">        final int startPos = Math.max(0, mCurItem - pageLimit);</span><br><span class="line">        // adapter 数据大小</span><br><span class="line">        final int N = mAdapter.getCount();</span><br><span class="line">        // 结束位置</span><br><span class="line">        final int endPos = Math.min(N-1, mCurItem + pageLimit);</span><br><span class="line"></span><br><span class="line">        // 省略代码...</span><br><span class="line"></span><br><span class="line">        // Locate the currently focused item or add it if needed.</span><br><span class="line">        int curIndex = -1;</span><br><span class="line">        ItemInfo curItem = null;</span><br><span class="line">        // 通过下标获取到 item 对象</span><br><span class="line">        for (curIndex = 0; curIndex &lt; mItems.size(); curIndex++) &#123;</span><br><span class="line">            final ItemInfo ii = mItems.get(curIndex);</span><br><span class="line">            if (ii.position &gt;= mCurItem) &#123;</span><br><span class="line">                if (ii.position == mCurItem) curItem = ii;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">        // 如果curItem 为空就新增一个 item 对象</span><br><span class="line">        if (curItem == null &amp;&amp; N &gt; 0) &#123;</span><br><span class="line">            curItem = addNewItem(mCurItem, curIndex);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Fill 3x the available width or up to the number of offscreen</span><br><span class="line">        // pages requested to either side, whichever is larger.</span><br><span class="line">        // If we have no current item we have no work to do.</span><br><span class="line">        if (curItem != null) &#123;</span><br><span class="line">            // viewpager 宽度的最左</span><br><span class="line">            float extraWidthLeft = 0.f;</span><br><span class="line">            int itemIndex = curIndex - 1;</span><br><span class="line">            // 获取前一个 item 对象 如果当前位置为0则为 null</span><br><span class="line">            ItemInfo ii = itemIndex &gt;= 0 ? mItems.get(itemIndex) : null;</span><br><span class="line">            // 获取 viewpager 的宽度</span><br><span class="line">            final int clientWidth = getClientWidth();</span><br><span class="line">            final float leftWidthNeeded = clientWidth &lt;= 0 ? 0 :</span><br><span class="line">                    2.f - curItem.widthFactor + (float) getPaddingLeft() / (float) clientWidth;</span><br><span class="line">            // 按位置从大到小检查 重新赋值 item 对象</span><br><span class="line">            for (int pos = mCurItem - 1; pos &gt;= 0; pos--) &#123;</span><br><span class="line">                if (extraWidthLeft &gt;= leftWidthNeeded &amp;&amp; pos &lt; startPos) &#123;</span><br><span class="line">                    if (ii == null) &#123;</span><br><span class="line">                        break;</span><br><span class="line">                    &#125;</span><br><span class="line">                    if (pos == ii.position &amp;&amp; !ii.scrolling) &#123;</span><br><span class="line">                        // 清除数据</span><br><span class="line">                        mItems.remove(itemIndex);</span><br><span class="line">                        // adapter 销毁 item</span><br><span class="line">                        mAdapter.destroyItem(this, pos, ii.object);              </span><br><span class="line">                        itemIndex--;</span><br><span class="line">                        curIndex--;</span><br><span class="line">                        ii = itemIndex &gt;= 0 ? mItems.get(itemIndex) : null;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; else if (ii != null &amp;&amp; pos == ii.position) &#123;</span><br><span class="line">                    extraWidthLeft += ii.widthFactor;</span><br><span class="line">                    itemIndex--;</span><br><span class="line">                    ii = itemIndex &gt;= 0 ? mItems.get(itemIndex) : null;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    ii = addNewItem(pos, itemIndex + 1);</span><br><span class="line">                    extraWidthLeft += ii.widthFactor;</span><br><span class="line">                    curIndex++;</span><br><span class="line">                    ii = itemIndex &gt;= 0 ? mItems.get(itemIndex) : null;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            float extraWidthRight = curItem.widthFactor;</span><br><span class="line">            itemIndex = curIndex + 1;</span><br><span class="line">            if (extraWidthRight &lt; 2.f) &#123;</span><br><span class="line">                ii = itemIndex &lt; mItems.size() ? mItems.get(itemIndex) : null;</span><br><span class="line">                final float rightWidthNeeded = clientWidth &lt;= 0 ? 0 :</span><br><span class="line">                        (float) getPaddingRight() / (float) clientWidth + 2.f;</span><br><span class="line">                for (int pos = mCurItem + 1; pos &lt; N; pos++) &#123;</span><br><span class="line">                    if (extraWidthRight &gt;= rightWidthNeeded &amp;&amp; pos &gt; endPos) &#123;</span><br><span class="line">                        if (ii == null) &#123;</span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        if (pos == ii.position &amp;&amp; !ii.scrolling) &#123;</span><br><span class="line">                            mItems.remove(itemIndex);</span><br><span class="line">                            mAdapter.destroyItem(this, pos, ii.object); </span><br><span class="line">                            ii = itemIndex &lt; mItems.size() ? mItems.get(itemIndex) : null;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; else if (ii != null &amp;&amp; pos == ii.position) &#123;</span><br><span class="line">                        extraWidthRight += ii.widthFactor;</span><br><span class="line">                        itemIndex++;</span><br><span class="line">                        ii = itemIndex &lt; mItems.size() ? mItems.get(itemIndex) : null;</span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                        ii = addNewItem(pos, itemIndex);</span><br><span class="line">                        itemIndex++;</span><br><span class="line">                        extraWidthRight += ii.widthFactor;</span><br><span class="line">                        ii = itemIndex &lt; mItems.size() ? mItems.get(itemIndex) : null;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            // 计算 pager 偏移量</span><br><span class="line">            calculatePageOffsets(curItem, curIndex, oldCurInfo);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        mAdapter.setPrimaryItem(this, mCurItem, curItem != null ? curItem.object : null);</span><br><span class="line"></span><br><span class="line">        mAdapter.finishUpdate(this);</span><br><span class="line"></span><br><span class="line">        // Check width measurement of current pages and drawing sort order.</span><br><span class="line">        // Update LayoutParams as needed.</span><br><span class="line">        final int childCount = getChildCount();</span><br><span class="line">        // 给每个 view 重新赋值</span><br><span class="line">        for (int i = 0; i &lt; childCount; i++) &#123;</span><br><span class="line">            final View child = getChildAt(i);</span><br><span class="line">            final LayoutParams lp = (LayoutParams) child.getLayoutParams();</span><br><span class="line">            lp.childIndex = i;</span><br><span class="line">            if (!lp.isDecor &amp;&amp; lp.widthFactor == 0.f) &#123;</span><br><span class="line">                // 0 means requery the adapter for this, it doesn&apos;t have a valid width.</span><br><span class="line">                final ItemInfo ii = infoForChild(child);</span><br><span class="line">                if (ii != null) &#123;</span><br><span class="line">                    lp.widthFactor = ii.widthFactor;</span><br><span class="line">                    lp.position = ii.position;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        sortChildDrawingOrder();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="calculatePageOffsets-curItem-curIndex-oldCurInfo"><a href="#calculatePageOffsets-curItem-curIndex-oldCurInfo" class="headerlink" title="calculatePageOffsets(curItem, curIndex, oldCurInfo)"></a>calculatePageOffsets(curItem, curIndex, oldCurInfo)</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line">private void calculatePageOffsets(ItemInfo curItem, int curIndex, ItemInfo oldCurInfo) &#123;</span><br><span class="line">       final int N = mAdapter.getCount();</span><br><span class="line">       final int width = getClientWidth();</span><br><span class="line">       final float marginOffset = width &gt; 0 ? (float) mPageMargin / width : 0;</span><br><span class="line">       // Fix up offsets for later layout.</span><br><span class="line">       if (oldCurInfo != null) &#123;</span><br><span class="line">           final int oldCurPosition = oldCurInfo.position;</span><br><span class="line">           // Base offsets off of oldCurInfo.</span><br><span class="line">           // 如果老item的位置小于显示item 的位置</span><br><span class="line">           if (oldCurPosition &lt; curItem.position) &#123;</span><br><span class="line">               int itemIndex = 0;</span><br><span class="line">               ItemInfo ii = null;</span><br><span class="line">               float offset = oldCurInfo.offset + oldCurInfo.widthFactor + marginOffset;</span><br><span class="line">               // 从老 item 的下一个 item 开始检查</span><br><span class="line">               for (int pos = oldCurPosition + 1;</span><br><span class="line">                       pos &lt;= curItem.position &amp;&amp; itemIndex &lt; mItems.size(); pos++) &#123;</span><br><span class="line">                   ii = mItems.get(itemIndex);</span><br><span class="line">                   // 获取此次外层循环的前一个 item 对象</span><br><span class="line">                   while (pos &gt; ii.position &amp;&amp; itemIndex &lt; mItems.size() - 1) &#123;</span><br><span class="line">                       itemIndex++;</span><br><span class="line">                       ii = mItems.get(itemIndex);</span><br><span class="line">                   &#125;</span><br><span class="line">                   // 如果外层循环的 pos 小于 item 的位置</span><br><span class="line">                   while (pos &lt; ii.position) &#123;</span><br><span class="line">                       // We don&apos;t have an item populated for this,</span><br><span class="line">                       // ask the adapter for an offset.</span><br><span class="line">                       // 偏移量增加</span><br><span class="line">                       offset += mAdapter.getPageWidth(pos) + marginOffset;</span><br><span class="line">                       pos++;</span><br><span class="line">                   &#125;</span><br><span class="line">                   ii.offset = offset;</span><br><span class="line">                   offset += ii.widthFactor + marginOffset;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125; else if (oldCurPosition &gt; curItem.position) &#123;</span><br><span class="line">               int itemIndex = mItems.size() - 1;</span><br><span class="line">               ItemInfo ii = null;</span><br><span class="line">               float offset = oldCurInfo.offset;</span><br><span class="line">               // 检查老位置的前一个 item 到当前当前显示 item</span><br><span class="line">               for (int pos = oldCurPosition - 1;</span><br><span class="line">                       pos &gt;= curItem.position &amp;&amp; itemIndex &gt;= 0; pos--) &#123;</span><br><span class="line">                   ii = mItems.get(itemIndex);</span><br><span class="line">                   // 获取此次外层循环的前一个 item 对象</span><br><span class="line">                   while (pos &lt; ii.position &amp;&amp; itemIndex &gt; 0) &#123;</span><br><span class="line">                       itemIndex--;</span><br><span class="line">                       ii = mItems.get(itemIndex);</span><br><span class="line">                   &#125;</span><br><span class="line">                    // 如果外层循环的 pos 大于 item 的位置</span><br><span class="line">                   while (pos &gt; ii.position) &#123;</span><br><span class="line">                       // We don&apos;t have an item populated for this,</span><br><span class="line">                       // ask the adapter for an offset.</span><br><span class="line">                       offset -= mAdapter.getPageWidth(pos) + marginOffset;</span><br><span class="line">                       pos--;</span><br><span class="line">                   &#125;</span><br><span class="line">                   offset -= ii.widthFactor + marginOffset;</span><br><span class="line">                   ii.offset = offset;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       // Base all offsets off of curItem.</span><br><span class="line">       final int itemCount = mItems.size();</span><br><span class="line">       float offset = curItem.offset;</span><br><span class="line">       int pos = curItem.position - 1;</span><br><span class="line">       mFirstOffset = curItem.position == 0 ? curItem.offset : -Float.MAX_VALUE;</span><br><span class="line">       mLastOffset = curItem.position == N - 1 ?</span><br><span class="line">               curItem.offset + curItem.widthFactor - 1 : Float.MAX_VALUE;</span><br><span class="line">       // Previous pages</span><br><span class="line">       for (int i = curIndex - 1; i &gt;= 0; i--, pos--) &#123;</span><br><span class="line">           final ItemInfo ii = mItems.get(i);</span><br><span class="line">           while (pos &gt; ii.position) &#123;</span><br><span class="line">               offset -= mAdapter.getPageWidth(pos--) + marginOffset;</span><br><span class="line">           &#125;</span><br><span class="line">           offset -= ii.widthFactor + marginOffset;</span><br><span class="line">           ii.offset = offset;</span><br><span class="line">           if (ii.position == 0) mFirstOffset = offset;</span><br><span class="line">       &#125;</span><br><span class="line">       offset = curItem.offset + curItem.widthFactor + marginOffset;</span><br><span class="line">       pos = curItem.position + 1;</span><br><span class="line">       // Next pages</span><br><span class="line">       for (int i = curIndex + 1; i &lt; itemCount; i++, pos++) &#123;</span><br><span class="line">           final ItemInfo ii = mItems.get(i);</span><br><span class="line">           while (pos &lt; ii.position) &#123;</span><br><span class="line">               offset += mAdapter.getPageWidth(pos++) + marginOffset;</span><br><span class="line">           &#125;</span><br><span class="line">           if (ii.position == N - 1) &#123;</span><br><span class="line">               mLastOffset = offset + ii.widthFactor - 1;</span><br><span class="line">           &#125;</span><br><span class="line">           ii.offset = offset;</span><br><span class="line">           offset += ii.widthFactor + marginOffset;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       mNeedCalculatePageOffsets = false;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="通常我们通过setCurrentItem-int-item-方法传入一个item-的postion-来完成对-view-的改变，那么我们来分析一下这其中都做了什么。分析源码得知改方法最终调用-void-setCurrentItemInternal-int-item-boolean-smoothScroll-boolean-always-int-velocity-方法。"><a href="#通常我们通过setCurrentItem-int-item-方法传入一个item-的postion-来完成对-view-的改变，那么我们来分析一下这其中都做了什么。分析源码得知改方法最终调用-void-setCurrentItemInternal-int-item-boolean-smoothScroll-boolean-always-int-velocity-方法。" class="headerlink" title="通常我们通过setCurrentItem(int item) 方法传入一个item 的postion 来完成对 view 的改变，那么我们来分析一下这其中都做了什么。分析源码得知改方法最终调用  void setCurrentItemInternal(int item, boolean smoothScroll, boolean always, int velocity)  方法。"></a>通常我们通过setCurrentItem(int item) 方法传入一个item 的postion 来完成对 view 的改变，那么我们来分析一下这其中都做了什么。分析源码得知改方法最终调用  void setCurrentItemInternal(int item, boolean smoothScroll, boolean always, int velocity)  方法。</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">void setCurrentItemInternal(int item, boolean smoothScroll, boolean always, int velocity) &#123;</span><br><span class="line">       // 异常处理</span><br><span class="line">       if (mAdapter == null || mAdapter.getCount() &lt;= 0) &#123;</span><br><span class="line">           setScrollingCacheEnabled(false);</span><br><span class="line">           return;</span><br><span class="line">       &#125;</span><br><span class="line">       if (!always &amp;&amp; mCurItem == item &amp;&amp; mItems.size() != 0) &#123;</span><br><span class="line">           setScrollingCacheEnabled(false);</span><br><span class="line">           return;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       // 越界处理</span><br><span class="line">       if (item &lt; 0) &#123;</span><br><span class="line">           item = 0;</span><br><span class="line">       &#125; else if (item &gt;= mAdapter.getCount()) &#123;</span><br><span class="line">           item = mAdapter.getCount() - 1;</span><br><span class="line">       &#125;</span><br><span class="line">       final int pageLimit = mOffscreenPageLimit;</span><br><span class="line">       // 如果需要显示的 item 的位置大于当前显示 item 位置 + 缓存最大值 或者 需要显示的 item 的位置小于当前显示 item 位置 - 缓存最大值</span><br><span class="line">       if (item &gt; (mCurItem + pageLimit) || item &lt; (mCurItem - pageLimit)) &#123;</span><br><span class="line">           // We are doing a jump by more than one page.  To avoid</span><br><span class="line">           // glitches, we want to keep all current pages in the view</span><br><span class="line">           // until the scroll ends.</span><br><span class="line">           // 所有的 item 是否滑动为真</span><br><span class="line">           for (int i=0; i&lt;mItems.size(); i++) &#123;</span><br><span class="line">               mItems.get(i).scrolling = true;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       // 如果要显示的 item 不是当前显示 item 则需要通知</span><br><span class="line">       final boolean dispatchSelected = mCurItem != item;</span><br><span class="line"></span><br><span class="line">       if (mFirstLayout) &#123;</span><br><span class="line">           // We don&apos;t have any idea how big we are yet and shouldn&apos;t have any pages either.</span><br><span class="line">           // Just set things up and let the pending layout handle things.</span><br><span class="line">           mCurItem = item;</span><br><span class="line">           if (dispatchSelected) &#123;</span><br><span class="line">               dispatchOnPageSelected(item);</span><br><span class="line">           &#125;</span><br><span class="line">           requestLayout();</span><br><span class="line">       &#125; else &#123;</span><br><span class="line">           // 填充</span><br><span class="line">           populate(item);</span><br><span class="line">           // 滑动到需要显示的 item</span><br><span class="line">           scrollToItem(item, smoothScroll, velocity, dispatchSelected);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>那么再来看看 scrollToItem(item, smoothScroll, velocity, dispatchSelected)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">private void scrollToItem(int item, boolean smoothScroll, int velocity,</span><br><span class="line">        boolean dispatchSelected) &#123;</span><br><span class="line">    final ItemInfo curInfo = infoForPosition(item);</span><br><span class="line">    int destX = 0;</span><br><span class="line">    if (curInfo != null) &#123;</span><br><span class="line">        final int width = getClientWidth();</span><br><span class="line">        destX = (int) (width * Math.max(mFirstOffset,</span><br><span class="line">                Math.min(curInfo.offset, mLastOffset)));</span><br><span class="line">    &#125;</span><br><span class="line">    // 如果需要滑动</span><br><span class="line">    if (smoothScroll) &#123;</span><br><span class="line">        // 滑动 </span><br><span class="line">        smoothScrollTo(destX, 0, velocity);</span><br><span class="line">        if (dispatchSelected) &#123;</span><br><span class="line">            dispatchOnPageSelected(item);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        if (dispatchSelected) &#123;</span><br><span class="line">            dispatchOnPageSelected(item);</span><br><span class="line">        &#125;</span><br><span class="line">        // 普通滑动</span><br><span class="line">        completeScroll(false);</span><br><span class="line">        scrollTo(destX, 0);</span><br><span class="line">        pageScrolled(destX);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="dataSetChanged"><a href="#dataSetChanged" class="headerlink" title="dataSetChanged()"></a>dataSetChanged()</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">void dataSetChanged() &#123;</span><br><span class="line">      // This method only gets called if our observer is attached, so mAdapter is non-null.</span><br><span class="line">      // adapter 数据总量</span><br><span class="line">      final int adapterCount = mAdapter.getCount();</span><br><span class="line">      mExpectedAdapterCount = adapterCount;</span><br><span class="line">      如果 item 总量小于缓存大小的两倍加一 而且 item 总量小于 adapter 数据总量</span><br><span class="line">      boolean needPopulate = mItems.size() &lt; mOffscreenPageLimit * 2 + 1 &amp;&amp;</span><br><span class="line">              mItems.size() &lt; adapterCount;</span><br><span class="line">      int newCurrItem = mCurItem;</span><br><span class="line"></span><br><span class="line">      boolean isUpdating = false;</span><br><span class="line">      // 遍历所有的 item</span><br><span class="line">      for (int i = 0; i &lt; mItems.size(); i++) &#123;</span><br><span class="line">          final ItemInfo ii = mItems.get(i);</span><br><span class="line">          // 通过 item 的内容等到 pos </span><br><span class="line">          final int newPos = mAdapter.getItemPosition(ii.object);</span><br><span class="line">          // 如果 pos 没有改变就跳过此次循环</span><br><span class="line">          if (newPos == PagerAdapter.POSITION_UNCHANGED) &#123;</span><br><span class="line">              continue;</span><br><span class="line">          &#125;</span><br><span class="line">          </span><br><span class="line">          if (newPos == PagerAdapter.POSITION_NONE) &#123;</span><br><span class="line">              // 移除 item</span><br><span class="line">              mItems.remove(i);</span><br><span class="line">              i--;</span><br><span class="line">              // 如果不在更新就开始更新</span><br><span class="line">              if (!isUpdating) &#123;</span><br><span class="line">                  mAdapter.startUpdate(this);</span><br><span class="line">                  isUpdating = true;</span><br><span class="line">              &#125;</span><br><span class="line">              // adapter 销毁当前 item</span><br><span class="line">              mAdapter.destroyItem(this, ii.position, ii.object);</span><br><span class="line">              needPopulate = true;</span><br><span class="line"></span><br><span class="line">              if (mCurItem == ii.position) &#123;</span><br><span class="line">                  // Keep the current item in the valid range</span><br><span class="line">                  newCurrItem = Math.max(0, Math.min(mCurItem, adapterCount - 1));</span><br><span class="line">                  needPopulate = true;</span><br><span class="line">              &#125;</span><br><span class="line">              continue;</span><br><span class="line">          &#125;</span><br><span class="line">      </span><br><span class="line">          if (ii.position != newPos) &#123;</span><br><span class="line">              if (ii.position == mCurItem) &#123;</span><br><span class="line">                  // Our current item changed position. Follow it.</span><br><span class="line">                  newCurrItem = newPos;</span><br><span class="line">              &#125;</span><br><span class="line"></span><br><span class="line">              ii.position = newPos;</span><br><span class="line">              needPopulate = true;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      // 如果正在更新就停止更新</span><br><span class="line">      if (isUpdating) &#123;</span><br><span class="line">          mAdapter.finishUpdate(this);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      Collections.sort(mItems, COMPARATOR);</span><br><span class="line">      // 如果需要填充</span><br><span class="line">      if (needPopulate) &#123;</span><br><span class="line">          // Reset our known page widths; populate will recompute them.</span><br><span class="line">          final int childCount = getChildCount();</span><br><span class="line">          // 设置每个 view</span><br><span class="line">          for (int i = 0; i &lt; childCount; i++) &#123;</span><br><span class="line">              final View child = getChildAt(i);</span><br><span class="line">              final LayoutParams lp = (LayoutParams) child.getLayoutParams();</span><br><span class="line">              if (!lp.isDecor) &#123;</span><br><span class="line">                  lp.widthFactor = 0.f;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          setCurrentItemInternal(newCurrItem, false, true);</span><br><span class="line">          requestLayout();</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="触摸事件处理"><a href="#触摸事件处理" class="headerlink" title="触摸事件处理"></a>触摸事件处理</h3><p>Viewpager因为是继承自ViewGroup的，所以触摸事件会依次调用dispatchTouchEvent() -&gt; onInterceptTouchEvent() 若返回true-&gt; onTouchEvent()处理触摸事件。</p>
+<h4 id="dispatchTouchEvent"><a href="#dispatchTouchEvent" class="headerlink" title="dispatchTouchEvent()"></a>dispatchTouchEvent()</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public boolean dispatchKeyEvent(KeyEvent event) &#123;</span><br><span class="line">    // Let the focused view and/or our descendants get the key first</span><br><span class="line">    return super.dispatchKeyEvent(event) || executeKeyEvent(event);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * You can call this function yourself to have the scroll view perform</span><br><span class="line"> * scrolling from a key event, just as if the event had been dispatched to</span><br><span class="line"> * it by the view hierarchy.</span><br><span class="line"> *</span><br><span class="line"> * @param event The key event to execute.</span><br><span class="line"> * @return Return true if the event was handled, else false.</span><br><span class="line"> */</span><br><span class="line">public boolean executeKeyEvent(KeyEvent event) &#123;</span><br><span class="line">    boolean handled = false;</span><br><span class="line">    if (event.getAction() == KeyEvent.ACTION_DOWN) &#123;</span><br><span class="line">        switch (event.getKeyCode()) &#123;</span><br><span class="line">            // 向左</span><br><span class="line">            case KeyEvent.KEYCODE_DPAD_LEFT:</span><br><span class="line">                handled = arrowScroll(FOCUS_LEFT);</span><br><span class="line">                break;</span><br><span class="line">            // 向右</span><br><span class="line">            case KeyEvent.KEYCODE_DPAD_RIGHT:</span><br><span class="line">                handled = arrowScroll(FOCUS_RIGHT);</span><br><span class="line">                break;</span><br><span class="line">            case KeyEvent.KEYCODE_TAB:</span><br><span class="line">                if (Build.VERSION.SDK_INT &gt;= 11) &#123;</span><br><span class="line">                    // The focus finder had a bug handling FOCUS_FORWARD and FOCUS_BACKWARD</span><br><span class="line">                    // before Android 3.0. Ignore the tab key on those devices.</span><br><span class="line">                    if (KeyEventCompat.hasNoModifiers(event)) &#123;</span><br><span class="line">                        handled = arrowScroll(FOCUS_FORWARD);</span><br><span class="line">                    &#125; else if (KeyEventCompat.hasModifiers(event, KeyEvent.META_SHIFT_ON)) &#123;</span><br><span class="line">                        handled = arrowScroll(FOCUS_BACKWARD);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                break;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return handled;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再来看看 arrowScroll(int direction) </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">public boolean arrowScroll(int direction) &#123;</span><br><span class="line">        View currentFocused = findFocus();</span><br><span class="line">        // 如果当前焦点就是自己滞空</span><br><span class="line">        if (currentFocused == this) &#123;</span><br><span class="line">            currentFocused = null;</span><br><span class="line">        &#125; else if (currentFocused != null) &#123;</span><br><span class="line">            boolean isChild = false;</span><br><span class="line">            // 以当前焦点 view 向上找父控件</span><br><span class="line">            for (ViewParent parent = currentFocused.getParent(); parent instanceof ViewGroup;</span><br><span class="line">                    parent = parent.getParent()) &#123;</span><br><span class="line">                // 如果父控件就是自己 结束循环</span><br><span class="line">                if (parent == this) &#123;</span><br><span class="line">                    isChild = true;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            // 如果当前 view 不是子控件 则当前焦点滞空</span><br><span class="line">            if (!isChild) &#123;</span><br><span class="line">                currentFocused = null;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        // 是否处理过</span><br><span class="line">        boolean handled = false;</span><br><span class="line">        // 查找下一个可获取焦点的 view </span><br><span class="line">        View nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused,</span><br><span class="line">                direction);</span><br><span class="line">        // 如果下一个可获取焦点的 view 不为空 而且下一个不是当前这个</span><br><span class="line">        if (nextFocused != null &amp;&amp; nextFocused != currentFocused) &#123;</span><br><span class="line">            if (direction == View.FOCUS_LEFT) &#123;</span><br><span class="line">                // If there is nothing to the left, or this is causing us to</span><br><span class="line">                // jump to the right, then what we really want to do is page left.</span><br><span class="line">                final int nextLeft = getChildRectInPagerCoordinates(mTempRect, nextFocused).left;</span><br><span class="line">                final int currLeft = getChildRectInPagerCoordinates(mTempRect, currentFocused).left;</span><br><span class="line">                // 如果下一个的左边大于当前的左边就向左移动 否则下一个获取焦点</span><br><span class="line">                if (currentFocused != null &amp;&amp; nextLeft &gt;= currLeft) &#123;</span><br><span class="line">                    handled = pageLeft();</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    handled = nextFocused.requestFocus();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else if (direction == View.FOCUS_RIGHT) &#123;</span><br><span class="line">                // If there is nothing to the right, or this is causing us to</span><br><span class="line">                // jump to the left, then what we really want to do is page right.</span><br><span class="line">                final int nextLeft = getChildRectInPagerCoordinates(mTempRect, nextFocused).left;</span><br><span class="line">                final int currLeft = getChildRectInPagerCoordinates(mTempRect, currentFocused).left;</span><br><span class="line">                 // 如果下一个的左边小于当前的左边就向左移动 否则下一个获取焦点</span><br><span class="line">                if (currentFocused != null &amp;&amp; nextLeft &lt;= currLeft) &#123;</span><br><span class="line">                    handled = pageRight();</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    handled = nextFocused.requestFocus();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else if (direction == FOCUS_LEFT || direction == FOCUS_BACKWARD) &#123;</span><br><span class="line">            // Trying to move left and nothing there; try to page.</span><br><span class="line">            handled = pageLeft();</span><br><span class="line">        &#125; else if (direction == FOCUS_RIGHT || direction == FOCUS_FORWARD) &#123;</span><br><span class="line">            // Trying to move right and nothing there; try to page.</span><br><span class="line">            handled = pageRight();</span><br><span class="line">        &#125;</span><br><span class="line">        if (handled) &#123;</span><br><span class="line">            playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));</span><br><span class="line">        &#125;</span><br><span class="line">        return handled;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="onInterceptTouchEvent-MotionEvent-ev"><a href="#onInterceptTouchEvent-MotionEvent-ev" class="headerlink" title="onInterceptTouchEvent(MotionEvent ev)"></a>onInterceptTouchEvent(MotionEvent ev)</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   public boolean onInterceptTouchEvent(MotionEvent ev) &#123;</span><br><span class="line">       /*</span><br><span class="line">        * This method JUST determines whether we want to intercept the motion.</span><br><span class="line">        * If we return true, onMotionEvent will be called and we do the actual</span><br><span class="line">        * scrolling there.</span><br><span class="line">        */</span><br><span class="line"></span><br><span class="line">       final int action = ev.getAction() &amp; MotionEventCompat.ACTION_MASK;</span><br><span class="line"></span><br><span class="line">       // Always take care of the touch gesture being complete.</span><br><span class="line">       // 如果取消或者离开屏幕则重置</span><br><span class="line">       if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) &#123;</span><br><span class="line">           // Release the drag.</span><br><span class="line">           if (DEBUG) Log.v(TAG, &quot;Intercept done!&quot;);</span><br><span class="line">           resetTouch();</span><br><span class="line">           return false;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       // Nothing more to do here if we have decided whether or not we</span><br><span class="line">       // are dragging.</span><br><span class="line">       if (action != MotionEvent.ACTION_DOWN) &#123;</span><br><span class="line">           // 父控件拖动</span><br><span class="line">           if (mIsBeingDragged) &#123;</span><br><span class="line">               if (DEBUG) Log.v(TAG, &quot;Intercept returning true!&quot;);</span><br><span class="line">               return true;</span><br><span class="line">           &#125;</span><br><span class="line">           // 父控件的触摸手势被判断为不应该拖动</span><br><span class="line">           if (mIsUnableToDrag) &#123;</span><br><span class="line">               if (DEBUG) Log.v(TAG, &quot;Intercept returning false!&quot;);</span><br><span class="line">               return false;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       switch (action) &#123;</span><br><span class="line">           case MotionEvent.ACTION_MOVE: &#123;</span><br><span class="line">               /*</span><br><span class="line">                * mIsBeingDragged == false, otherwise the shortcut would have caught it. Check</span><br><span class="line">                * whether the user has moved far enough from his original down touch.</span><br><span class="line">                */</span><br><span class="line"></span><br><span class="line">               /*</span><br><span class="line">               * Locally do absolute value. mLastMotionY is set to the y value</span><br><span class="line">               * of the down event.</span><br><span class="line">               */</span><br><span class="line">               final int activePointerId = mActivePointerId;</span><br><span class="line">               if (activePointerId == INVALID_POINTER) &#123;</span><br><span class="line">                   // If we don&apos;t have a valid id, the touch down wasn&apos;t on content.</span><br><span class="line">                   break;</span><br><span class="line">               &#125;</span><br><span class="line"></span><br><span class="line">               final int pointerIndex = MotionEventCompat.findPointerIndex(ev, activePointerId);</span><br><span class="line">               final float x = MotionEventCompat.getX(ev, pointerIndex);</span><br><span class="line">               final float dx = x - mLastMotionX;</span><br><span class="line">               final float xDiff = Math.abs(dx);</span><br><span class="line">               final float y = MotionEventCompat.getY(ev, pointerIndex);</span><br><span class="line">               final float yDiff = Math.abs(y - mInitialMotionY);</span><br><span class="line">               if (DEBUG) Log.v(TAG, &quot;Moved x to &quot; + x + &quot;,&quot; + y + &quot; diff=&quot; + xDiff + &quot;,&quot; + yDiff);</span><br><span class="line">               // 不是从边缘开始触摸滑动 &amp;&amp; 可以滑动</span><br><span class="line">               if (dx != 0 &amp;&amp; !isGutterDrag(mLastMotionX, dx) &amp;&amp;</span><br><span class="line">                       canScroll(this, false, (int) dx, (int) x, (int) y)) &#123;</span><br><span class="line">                   // Nested view has scrollable area under this point. Let it be handled there.</span><br><span class="line">                   mLastMotionX = x;</span><br><span class="line">                   mLastMotionY = y;</span><br><span class="line">                   mIsUnableToDrag = true;</span><br><span class="line">                   return false;</span><br><span class="line">               &#125;</span><br><span class="line">               if (xDiff &gt; mTouchSlop &amp;&amp; xDiff * 0.5f &gt; yDiff) &#123;</span><br><span class="line">                   if (DEBUG) Log.v(TAG, &quot;Starting drag!&quot;);</span><br><span class="line">                   mIsBeingDragged = true;</span><br><span class="line">                   requestParentDisallowInterceptTouchEvent(true);</span><br><span class="line">                   setScrollState(SCROLL_STATE_DRAGGING);</span><br><span class="line">                   mLastMotionX = dx &gt; 0 ? mInitialMotionX + mTouchSlop :</span><br><span class="line">                           mInitialMotionX - mTouchSlop;</span><br><span class="line">                   mLastMotionY = y;</span><br><span class="line">                   setScrollingCacheEnabled(true);</span><br><span class="line">               &#125; else if (yDiff &gt; mTouchSlop) &#123;</span><br><span class="line">                   // The finger has moved enough in the vertical</span><br><span class="line">                   // direction to be counted as a drag...  abort</span><br><span class="line">                   // any attempt to drag horizontally, to work correctly</span><br><span class="line">                   // with children that have scrolling containers.</span><br><span class="line">                   if (DEBUG) Log.v(TAG, &quot;Starting unable to drag!&quot;);</span><br><span class="line">                   mIsUnableToDrag = true;</span><br><span class="line">               &#125;</span><br><span class="line">               // 开始滑动</span><br><span class="line">               if (mIsBeingDragged) &#123;</span><br><span class="line">                   // Scroll to follow the motion event</span><br><span class="line">                   if (performDrag(x)) &#123;</span><br><span class="line">                       ViewCompat.postInvalidateOnAnimation(this);</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">               break;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           case MotionEvent.ACTION_DOWN: &#123;</span><br><span class="line">               /*</span><br><span class="line">                * Remember location of down touch.</span><br><span class="line">                * ACTION_DOWN always refers to pointer index 0.</span><br><span class="line">                */</span><br><span class="line">               // 初始化</span><br><span class="line">               mLastMotionX = mInitialMotionX = ev.getX();</span><br><span class="line">               mLastMotionY = mInitialMotionY = ev.getY();</span><br><span class="line">               mActivePointerId = MotionEventCompat.getPointerId(ev, 0);</span><br><span class="line">               mIsUnableToDrag = false;</span><br><span class="line"></span><br><span class="line">               mIsScrollStarted = true;</span><br><span class="line">               mScroller.computeScrollOffset();</span><br><span class="line">               if (mScrollState == SCROLL_STATE_SETTLING &amp;&amp;</span><br><span class="line">                       Math.abs(mScroller.getFinalX() - mScroller.getCurrX()) &gt; mCloseEnough) &#123;</span><br><span class="line">                   // Let the user &apos;catch&apos; the pager as it animates.</span><br><span class="line">                   mScroller.abortAnimation();</span><br><span class="line">                   mPopulatePending = false;</span><br><span class="line">                   populate();</span><br><span class="line">                   mIsBeingDragged = true;</span><br><span class="line">                   requestParentDisallowInterceptTouchEvent(true);</span><br><span class="line">                   setScrollState(SCROLL_STATE_DRAGGING);</span><br><span class="line">               &#125; else &#123;</span><br><span class="line">                   completeScroll(false);</span><br><span class="line">                   mIsBeingDragged = false;</span><br><span class="line">               &#125;</span><br><span class="line"></span><br><span class="line">               if (DEBUG) Log.v(TAG, &quot;Down at &quot; + mLastMotionX + &quot;,&quot; + mLastMotionY</span><br><span class="line">                       + &quot; mIsBeingDragged=&quot; + mIsBeingDragged</span><br><span class="line">                       + &quot;mIsUnableToDrag=&quot; + mIsUnableToDrag);</span><br><span class="line">               break;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           case MotionEventCompat.ACTION_POINTER_UP:</span><br><span class="line">               onSecondaryPointerUp(ev);</span><br><span class="line">               break;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       if (mVelocityTracker == null) &#123;</span><br><span class="line">           mVelocityTracker = VelocityTracker.obtain();</span><br><span class="line">       &#125;</span><br><span class="line">       mVelocityTracker.addMovement(ev);</span><br><span class="line"></span><br><span class="line">       /*</span><br><span class="line">        * The only time we want to intercept motion events is if we are in the</span><br><span class="line">        * drag mode.</span><br><span class="line">        */</span><br><span class="line">       return mIsBeingDragged;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="onTouchEvent-MotionEvent-ev"><a href="#onTouchEvent-MotionEvent-ev" class="headerlink" title="onTouchEvent(MotionEvent ev)()"></a>onTouchEvent(MotionEvent ev)()</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   public boolean onTouchEvent(MotionEvent ev) &#123;</span><br><span class="line">       if (mFakeDragging) &#123;</span><br><span class="line">           // A fake drag is in progress already, ignore this real one</span><br><span class="line">           // but still eat the touch events.</span><br><span class="line">           // (It is likely that the user is multi-touching the screen.)</span><br><span class="line">           return true;</span><br><span class="line">       &#125;</span><br><span class="line">       // 按下 &amp;&amp; 触摸到边缘 返回 false</span><br><span class="line">       if (ev.getAction() == MotionEvent.ACTION_DOWN &amp;&amp; ev.getEdgeFlags() != 0) &#123;</span><br><span class="line">           // Don&apos;t handle edge touches immediately -- they may actually belong to one of our</span><br><span class="line">           // descendants.</span><br><span class="line">           return false;</span><br><span class="line">       &#125;</span><br><span class="line">       // adapter 为空 || adapter 数据为0 返回 false</span><br><span class="line">       if (mAdapter == null || mAdapter.getCount() == 0) &#123;</span><br><span class="line">           // Nothing to present or scroll; nothing to touch.</span><br><span class="line">           return false;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       if (mVelocityTracker == null) &#123;</span><br><span class="line">           mVelocityTracker = VelocityTracker.obtain();</span><br><span class="line">       &#125;</span><br><span class="line">       mVelocityTracker.addMovement(ev);</span><br><span class="line"></span><br><span class="line">       final int action = ev.getAction();</span><br><span class="line">       boolean needsInvalidate = false;</span><br><span class="line"></span><br><span class="line">       switch (action &amp; MotionEventCompat.ACTION_MASK) &#123;</span><br><span class="line">           case MotionEvent.ACTION_DOWN: &#123;</span><br><span class="line">               // 终止动画</span><br><span class="line">               mScroller.abortAnimation();</span><br><span class="line">               // 填充不等待</span><br><span class="line">               mPopulatePending = false;</span><br><span class="line">               // 调用填充方法</span><br><span class="line">               populate();</span><br><span class="line"></span><br><span class="line">               // Remember where the motion event started</span><br><span class="line">               // 记录 x 和 y 值</span><br><span class="line">               mLastMotionX = mInitialMotionX = ev.getX();</span><br><span class="line">               mLastMotionY = mInitialMotionY = ev.getY();</span><br><span class="line">               // 活动 id</span><br><span class="line">               mActivePointerId = MotionEventCompat.getPointerId(ev, 0);</span><br><span class="line">               break;</span><br><span class="line">           &#125;</span><br><span class="line">           case MotionEvent.ACTION_MOVE:</span><br><span class="line">               if (!mIsBeingDragged) &#123;</span><br><span class="line">                   final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);</span><br><span class="line">                   if (pointerIndex == -1) &#123;</span><br><span class="line">                       // A child has consumed some touch events and put us into an inconsistent state.</span><br><span class="line">                       needsInvalidate = resetTouch();</span><br><span class="line">                       break;</span><br><span class="line">                   &#125;</span><br><span class="line">                   // 获取 x</span><br><span class="line">                   final float x = MotionEventCompat.getX(ev, pointerIndex);</span><br><span class="line">                   // 等到绝对值</span><br><span class="line">                   final float xDiff = Math.abs(x - mLastMotionX);</span><br><span class="line">                   // 获取 y</span><br><span class="line">                   final float y = MotionEventCompat.getY(ev, pointerIndex);</span><br><span class="line">                   // 等到绝对值</span><br><span class="line">                   final float yDiff = Math.abs(y - mLastMotionY);</span><br><span class="line">                   if (DEBUG) Log.v(TAG, &quot;Moved x to &quot; + x + &quot;,&quot; + y + &quot; diff=&quot; + xDiff + &quot;,&quot; + yDiff);</span><br><span class="line">                   if (xDiff &gt; mTouchSlop &amp;&amp; xDiff &gt; yDiff) &#123;</span><br><span class="line">                       if (DEBUG) Log.v(TAG, &quot;Starting drag!&quot;);</span><br><span class="line">                       // </span><br><span class="line">                       mIsBeingDragged = true;</span><br><span class="line">                       requestParentDisallowInterceptTouchEvent(true);</span><br><span class="line">                       // 赋值</span><br><span class="line">                       mLastMotionX = x - mInitialMotionX &gt; 0 ? mInitialMotionX + mTouchSlop :</span><br><span class="line">                               mInitialMotionX - mTouchSlop;</span><br><span class="line">                       mLastMotionY = y;</span><br><span class="line">                       setScrollState(SCROLL_STATE_DRAGGING);</span><br><span class="line">                       setScrollingCacheEnabled(true);</span><br><span class="line"></span><br><span class="line">                       // Disallow Parent Intercept, just in case</span><br><span class="line">                       ViewParent parent = getParent();</span><br><span class="line">                       if (parent != null) &#123;</span><br><span class="line">                           parent.requestDisallowInterceptTouchEvent(true);</span><br><span class="line">                       &#125;</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">               // Not else! Note that mIsBeingDragged can be set above.</span><br><span class="line">               if (mIsBeingDragged) &#123;</span><br><span class="line">                   // Scroll to follow the motion event</span><br><span class="line">                   final int activePointerIndex = MotionEventCompat.findPointerIndex(</span><br><span class="line">                           ev, mActivePointerId);</span><br><span class="line">                   final float x = MotionEventCompat.getX(ev, activePointerIndex);</span><br><span class="line">                   needsInvalidate |= performDrag(x);</span><br><span class="line">               &#125;</span><br><span class="line">               break;</span><br><span class="line">           case MotionEvent.ACTION_UP:</span><br><span class="line">               if (mIsBeingDragged) &#123;</span><br><span class="line">                   final VelocityTracker velocityTracker = mVelocityTracker;</span><br><span class="line">                   velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);</span><br><span class="line">                   int initialVelocity = (int) VelocityTrackerCompat.getXVelocity(</span><br><span class="line">                           velocityTracker, mActivePointerId);</span><br><span class="line">                   mPopulatePending = true;</span><br><span class="line">                   final int width = getClientWidth();</span><br><span class="line">                   final int scrollX = getScrollX();</span><br><span class="line">                   final ItemInfo ii = infoForCurrentScrollPosition();</span><br><span class="line">                   final float marginOffset = (float) mPageMargin / width;</span><br><span class="line">                   final int currentPage = ii.position;</span><br><span class="line">                   final float pageOffset = (((float) scrollX / width) - ii.offset)</span><br><span class="line">                           / (ii.widthFactor + marginOffset);</span><br><span class="line">                   final int activePointerIndex =</span><br><span class="line">                           MotionEventCompat.findPointerIndex(ev, mActivePointerId);</span><br><span class="line">                   final float x = MotionEventCompat.getX(ev, activePointerIndex);</span><br><span class="line">                   final int totalDelta = (int) (x - mInitialMotionX);</span><br><span class="line">                   int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity,</span><br><span class="line">                           totalDelta);</span><br><span class="line">                   setCurrentItemInternal(nextPage, true, true, initialVelocity);</span><br><span class="line"></span><br><span class="line">                   needsInvalidate = resetTouch();</span><br><span class="line">               &#125;</span><br><span class="line">               break;</span><br><span class="line">           // 如果取消 就滑动回当前 item</span><br><span class="line">           case MotionEvent.ACTION_CANCEL:</span><br><span class="line">               if (mIsBeingDragged) &#123;</span><br><span class="line">                   scrollToItem(mCurItem, true, 0, false);</span><br><span class="line">                   needsInvalidate = resetTouch();</span><br><span class="line">               &#125;</span><br><span class="line">               break;</span><br><span class="line">           case MotionEventCompat.ACTION_POINTER_DOWN: &#123;</span><br><span class="line">               final int index = MotionEventCompat.getActionIndex(ev);</span><br><span class="line">               final float x = MotionEventCompat.getX(ev, index);</span><br><span class="line">               mLastMotionX = x;</span><br><span class="line">               mActivePointerId = MotionEventCompat.getPointerId(ev, index);</span><br><span class="line">               break;</span><br><span class="line">           &#125;</span><br><span class="line">           case MotionEventCompat.ACTION_POINTER_UP:</span><br><span class="line">               onSecondaryPointerUp(ev);</span><br><span class="line">               mLastMotionX = MotionEventCompat.getX(ev,</span><br><span class="line">                       MotionEventCompat.findPointerIndex(ev, mActivePointerId));</span><br><span class="line">               break;</span><br><span class="line">       &#125;</span><br><span class="line">       if (needsInvalidate) &#123;</span><br><span class="line">           ViewCompat.postInvalidateOnAnimation(this);</span><br><span class="line">       &#125;</span><br><span class="line">       return true;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/Mac-使用的一些坑/" rel="next" title="Mac 使用的一些坑">
+                <i class="fa fa-chevron-left"></i> Mac 使用的一些坑
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/Hexo-theme-Next/" rel="prev" title="Hexo Theme Next">
+                Hexo Theme Next <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://avatars3.githubusercontent.com/u/17670278?v=3&s=460"
+                alt="privatez" />
+            
+              <p class="site-author-name" itemprop="name">privatez</p>
+              <p class="site-description motion-element" itemprop="description">I will carry you.</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/privatez" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#怎么使用-ViewPager"><span class="nav-number">1.0.1.</span> <span class="nav-text">怎么使用 ViewPager</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ViewPager-源码分析"><span class="nav-number">2.</span> <span class="nav-text">ViewPager 源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#构造方法"><span class="nav-number">2.0.1.</span> <span class="nav-text">构造方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#viewpager-中的成员变量定义"><span class="nav-number">2.0.2.</span> <span class="nav-text">viewpager 中的成员变量定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#根据我们平常使用-viewpager-的习惯我们先分析一下-setadpter-中的源码："><span class="nav-number">2.0.3.</span> <span class="nav-text">根据我们平常使用 viewpager 的习惯我们先分析一下 setadpter 中的源码：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#接下来我们分析该方法中最重要的方法-populate"><span class="nav-number">2.0.4.</span> <span class="nav-text">接下来我们分析该方法中最重要的方法 populate()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#calculatePageOffsets-curItem-curIndex-oldCurInfo"><span class="nav-number">2.0.5.</span> <span class="nav-text">calculatePageOffsets(curItem, curIndex, oldCurInfo)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#通常我们通过setCurrentItem-int-item-方法传入一个item-的postion-来完成对-view-的改变，那么我们来分析一下这其中都做了什么。分析源码得知改方法最终调用-void-setCurrentItemInternal-int-item-boolean-smoothScroll-boolean-always-int-velocity-方法。"><span class="nav-number">2.0.6.</span> <span class="nav-text">通常我们通过setCurrentItem(int item) 方法传入一个item 的postion 来完成对 view 的改变，那么我们来分析一下这其中都做了什么。分析源码得知改方法最终调用  void setCurrentItemInternal(int item, boolean smoothScroll, boolean always, int velocity)  方法。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dataSetChanged"><span class="nav-number">2.0.7.</span> <span class="nav-text">dataSetChanged()</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#触摸事件处理"><span class="nav-number">2.1.</span> <span class="nav-text">触摸事件处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#dispatchTouchEvent"><span class="nav-number">2.1.1.</span> <span class="nav-text">dispatchTouchEvent()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#onInterceptTouchEvent-MotionEvent-ev"><span class="nav-number">2.1.2.</span> <span class="nav-text">onInterceptTouchEvent(MotionEvent ev)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#onTouchEvent-MotionEvent-ev"><span class="nav-number">2.1.3.</span> <span class="nav-text">onTouchEvent(MotionEvent ev)()</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">privatez</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("HqPAso3tyd34ISRdSjp1xGx8-gzGzoHsz", "qqXSkcsE4zonBcelqpqFzk8O");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
